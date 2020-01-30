@@ -106,6 +106,7 @@ class Store:
 
         self._timeBeforeClient -= elapsedTime
 
+        #open or close checkout
         if(self._timeBeforeOpening > 0):
             self._timeBeforeOpening -= elapsedTime
             if(self._timeBeforeOpening <= 0):
@@ -116,6 +117,7 @@ class Store:
                 self._closeCheck()
         
         
+        #add client
         if(self._timeBeforeClient <= 0):
             self._addClient()
 
@@ -179,12 +181,13 @@ class Store:
         textOpenRect.move(2,2)
         textCloseRect.move(2,2)
 
-        window.blit(textOpen,textOpenRect)
-        window.blit(textClose,textCloseRect)
 
+        #draw
         for check in self._checkouts:
             check.draw(window)
         for client in self._clients:
             client.draw(window)
+        window.blit(textOpen,textOpenRect)
+        window.blit(textClose,textCloseRect)
         
     
