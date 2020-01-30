@@ -3,6 +3,7 @@ from client import Client
 import random
 import time
 
+
 #Graphical CONST
 SPACE_BETWEEN_CHECKOUTS = 6
 CHECKOUT_OFFSET = SPACE_BETWEEN_CHECKOUTS/2.0
@@ -21,8 +22,8 @@ MAX_CLIENT_SPEED = 100
 MIN_CLIENT_SPEED = 80
 MAX_CLIENT = 200
 #Time in store
-MIN_TSTORE = 30
-MAX_TSTORE = 300
+MIN_TSTORE = 3
+MAX_TSTORE = 30
 #Relation between store time and checkout time
 CHECKOUT_STORE_RELATION = 1
 
@@ -59,7 +60,7 @@ class Store:
             tcheckout = tstore/CHECKOUT_STORE_RELATION
             destX = random.randint(radius,self._size[0]-radius)
             destY = random.randint(radius,self._size[1]-50-(radius*2)*5)
-            speed = (tstore-MIN_TSTORE)/(MAX_TSTORE-MIN_TSTORE) * (MAX_CLIENT_SPEED-MIN_CLIENT_SPEED) + MIN_CLIENT_SPEED
+            speed = ((tstore-MIN_TSTORE)/(MAX_TSTORE-MIN_TSTORE) * (MAX_CLIENT_SPEED-MIN_CLIENT_SPEED) + MIN_CLIENT_SPEED)
             self._clients.append(Client(posX,posY,radius,tstore,tcheckout,destX,destY,speed))
 
     #add a checkout to store
@@ -104,17 +105,10 @@ class Store:
         elapsedTime =  time.time() - self._lastT
         self._lastT  = time.time()
 
+
+
         self._timeBeforeClient -= elapsedTime
 
-        #open or close checkout
-        if(self._timeBeforeOpening > 0):
-            self._timeBeforeOpening -= elapsedTime
-            if(self._timeBeforeOpening <= 0):
-                self._openCheck()
-        if(self._timeBeforeClosing > 0):
-            self._timeBeforeClosing -= elapsedTime
-            if(self._timeBeforeClosing <= 0):
-                self._closeCheck()
         
         
         #add client
@@ -127,26 +121,29 @@ class Store:
                 self._timeBeforeClient = random.randrange(MIN_SECOND_BETWEEN_CLIENTS,MAX_SECOND_BETWEEN_CLIENTS)
 
 
+        nbWaitingForCheckout = 0
+
         #clients process
         for client in self._clients:
             #move client
             client.moving(self._lastFreeCheckout)
             #redirect to last free checkout
             if(client.waitingForCheckout is not None and not client.isInQueue):
+                nbWaitingForCheckout += 1
                 client.goTo(self._lastFreeCheckout)
             #make client go forward in queue
             if(client.isInQueue):
                 client.goTo(client.isInQueue)
 
+            needOpening = True
             #Detect the need of opening a new checkout or redirect to a free
             if(self._lastFreeCheckout.isFull()):
-                needOpening = True
                 for i in range(self._idLastOpened+1):
                     if(not self._checkouts[i].isFull()):
                         self._lastFreeCheckout = self._checkouts[i]
                         needOpening = False
                         break
-                if(needOpening):
+                if(needOpening and nbWaitingForCheckout > 0):
                     self._advertiseNeededCheck()
 
         #clients is checking out
@@ -159,8 +156,24 @@ class Store:
             inQueue += check.nbClient()
 
         #close unneeded checkout
-        if(inQueue < self._idLastOpened * MAX_CLIENT_PER_CHECKOUT):
+        if(inQueue + nbWaitingForCheckout < (self._idLastOpened-1) * MAX_CLIENT_PER_CHECKOUT):
             self._advertiseClosing()
+
+
+        #open or close checkout
+        if(self._timeBeforeOpening > 0):
+            self._timeBeforeOpening -= elapsedTime
+            if(not needOpening or nbWaitingForCheckout <= 0):
+                self._timeBeforeOpening = 0
+            elif(self._timeBeforeOpening <= 0):
+                self._openCheck()
+
+        if(self._timeBeforeClosing > 0):
+            self._timeBeforeClosing -= elapsedTime
+            if(inQueue + nbWaitingForCheckout > self._idLastOpened * MAX_CLIENT_PER_CHECKOUT):
+                self._timeBeforeClosing = 0
+            elif(self._timeBeforeClosing <= 0):
+                self._closeCheck()
         
 
     #draw all

@@ -6,7 +6,7 @@ from store import Store
 pygame.init()
 pygame.display.set_caption('Migros Simulator 2k20')
 
-store = Store()
+store = Store(800,600,10,50)
 
 size = width, height = 800,600
 

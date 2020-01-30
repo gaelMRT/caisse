@@ -37,7 +37,7 @@ class Client:
         diffY = self._destY - self._y
 
         #if arrived queue else move
-        if(math.hypot(diffX,diffY) < self._speed):
+        if(math.hypot(diffX,diffY) < self._speed * dtime):
             self.arrivedToDest = True
             if(self.waitingForCheckout is not None and not self.waitingForCheckout.isFull() and self.waitingForCheckout.isOpen):
                 self.waitingForCheckout.queue(self)
