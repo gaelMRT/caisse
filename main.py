@@ -1,14 +1,14 @@
+#demande l'installation locale de pygame pour python3
 import sys,time,pygame
 from store import Store
-from pygame import gfxdraw
 
 
 pygame.init()
+pygame.display.set_caption('Migros Simulator 2k20')
 
 store = Store()
 
 size = width, height = 800,600
-speed = [2,2]
 
 black = 0,0,0
 
@@ -18,6 +18,7 @@ green = 0,255,0
 
 
 window = pygame.display.set_mode(store._size)
+
 
 font = pygame.font.Font('freesansbold.ttf',32)
 

@@ -23,9 +23,11 @@ class Client:
 
 
     def moving(self,lastOpenCheck):
+        #calcul delta time
         dtime = time.time()-self._time
         self._time = time.time()
 
+        #decrement store time if not checkouting
         if(self.waitingForCheckout is None):
             self.tstore -= dtime
             if(self.tstore <= 0):
@@ -34,15 +36,17 @@ class Client:
         diffX = self._destX - self._x
         diffY = self._destY - self._y
 
+        #if arrived queue else move
         if(math.hypot(diffX,diffY) < self._speed):
             self.arrivedToDest = True
             if(self.waitingForCheckout is not None and not self.waitingForCheckout.isFull() and self.waitingForCheckout.isOpen):
                 self.waitingForCheckout.queue(self)
         else:
             angle = math.atan2(diffY,diffX)
-            self._x += self._speed  * math.cos(angle)
-            self._y += self._speed  * math.sin(angle)
+            self._x += self._speed  * dtime * math.cos(angle)
+            self._y += self._speed  * dtime * math.sin(angle)
 
+    #set new checkout as destination
     def goTo(self,checkout):
         if(self.isInQueue is None):
             self.waitingForCheckout = checkout
@@ -57,6 +61,7 @@ class Client:
         diffY = self._destY - self._y
         self.arrivedToDest = (math.hypot(diffX,diffY) < self._speed)
 
+    #draw itself in window
     def draw(self,window):
         r = 0
         color = (self.waitingForCheckout is not None)*64+ (self.isInQueue is not None) * 64 + ((self._totalTCheckout-self.tcheckout)/self._totalTCheckout)*128
